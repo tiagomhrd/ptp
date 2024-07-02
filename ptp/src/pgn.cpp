@@ -53,6 +53,7 @@ const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::
             for (size_t e = 1; e <= nv - 2; ++e) {
                 edgeGaussPos[e - 1].push_back(vertices[e] * (1 - xig) + vertices[e+1] * xig);
             }
+            ++g;
         }
         // The order has to be iterated because of the homegeneous numerical integration
         for (int k = 2 * (n - 1), maxk = std::min(maxOrder, 2 * n - 1); k <= maxk; ++k) {
