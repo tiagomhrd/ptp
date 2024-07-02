@@ -1,0 +1,7 @@
+[submodule "third_party/Eigen"]
+	path = third_party/Eigen
+	url = https://gitlab.com/libeigen/eigen.git
+	branch = 3.4
+[submodule "third_party/mnl"]
+	path = third_party/mnl
+	url = https://github.com/tiagomhrd/mnl.git
