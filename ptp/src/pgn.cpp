@@ -24,26 +24,26 @@ const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::
     std::vector<double> integrals(mnl::PSpace2D::SpaceDim(maxOrder));
     const Eigen::Vector2d& x0 = vertices[0];
     const size_t nv = vertices.size();
-    Eigen::VectorXd edgeConstants = Eigen::VectorXd::Zero(nv - 2);
-    // Initialize edgeConstants
-    {
+
+    // Create and initialize edge constants.
+    const Eigen::VectorXd edgeConstants = [&x0, & vertices, &nv]() {
+        Eigen::VectorXd res = Eigen::VectorXd::Zero(nv - 2);
         Eigen::Matrix2d Q;
         Q << 0., 1., -1., 0.;
         std::transform(vertices.cbegin() + 1, vertices.cend() - 1,
-            vertices.cbegin() + 2, edgeConstants.begin(),
+            vertices.cbegin() + 2, res.begin(),
             [&Q, &x0](const auto& xs, const auto& xe) {
                 return (xs - x0).dot(Q * (xe - xs));
             });
-    }
+        return res;
+        }();
+
 
     for (int n = 1, ngMax = ceil((maxOrder + 1.) * .5); n <= ngMax; ++n) {
         // Initialize quadrature structures
         const auto quadrature = mnl::GaussLegendreR(2 * n - 1);
-        
         const size_t ng = quadrature.size();
-        
         Eigen::VectorXd w = Eigen::VectorXd::Zero(ng);
-        
         std::vector<std::vector<Eigen::Vector2d>> edgeGaussPos(nv - 2);
         for (auto& vec : edgeGaussPos) {
             vec.reserve(ng);
@@ -55,6 +55,7 @@ const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::
             }
             ++g;
         }
+
         // The order has to be iterated because of the homegeneous numerical integration
         for (int k = 2 * (n - 1), maxk = std::min(maxOrder, 2 * n - 1); k <= maxk; ++k) {
             const double orderConst = pow((double)(k + 2), -1.);
@@ -78,4 +79,14 @@ const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::
     }
 
     return integrals;
+}
+
+const double Polygon2D::Diameter(const std::vector<Eigen::Vector2d>& vertices)
+{
+    size_t nv = vertices.size();
+    double diameter = 0.0;
+    for (size_t i = 0; i < nv - 1; ++i)
+        for (size_t j = i + 1; j < nv; ++j)
+            diameter = std::max(diameter, (vertices[i] - vertices[j]).norm());
+    return diameter;
 }
