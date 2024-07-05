@@ -144,7 +144,8 @@ const std::vector<double> Polygon3D::MonomialIntegrals(const std::vector<Eigen::
         for (int k = 2 * (n - 1), maxk = std::min(maxOrder, 2 * n - 1); k <= maxk; ++k) {
             const double orderConst = pow((double)(k + 2), -1.);
             for (int alpha = mnl::PSpace3D::SpaceDim(k - 1), maxAlpha = mnl::PSpace3D::SpaceDim(k); alpha < maxAlpha; ++alpha) {
-                const int ex = mnl::PSpace3D::Exponent(alpha, 0),
+                const int 
+                    ex = mnl::PSpace3D::Exponent(alpha, 0),
                     ey = mnl::PSpace3D::Exponent(alpha, 1),
                     ez = mnl::PSpace3D::Exponent(alpha, 2),
                     dx = mnl::PSpace3D::D(alpha, 0),
@@ -198,4 +199,56 @@ const std::vector<Eigen::Vector3d> Polygon3D::GetVertices(const std::vector<Eige
     vertices.reserve(faceIndices.size());
     std::for_each(faceIndices.cbegin(), faceIndices.cend(), [&vertices, &polyhedronVertices](const size_t index) { vertices.emplace_back(polyhedronVertices[index]); });
     return vertices;
+}
+
+const std::vector<double> Polyhedron::MonomialIntegrals(const std::vector<Eigen::Vector3d> vertices, const std::vector<std::vector<size_t>> faces, int maxOrder)
+{
+    std::vector<double> integrals(mnl::PSpace3D::SpaceDim(maxOrder));
+    const Eigen::Vector3d& x0 = vertices[0];
+
+    // Preprocess faces
+    std::vector<std::vector<size_t>> effectiveFaces;
+    std::vector<std::vector<double>> faceMonIntegrals;
+    std::vector<Eigen::Vector3d> faceNormals;
+    effectiveFaces.reserve(faces.size());
+    faceMonIntegrals.reserve(faces.size());
+    faceNormals.reserve(faces.size());
+    for (const auto& face : faces) {
+        if (std::find(face.cbegin(), face.cend(), 0) != face.cend())
+            continue;
+        effectiveFaces.emplace_back(face);
+        faceNormals.emplace_back(Polygon3D::Normal(vertices, face));
+        faceMonIntegrals.emplace_back(Polygon3D::MonomialIntegrals(vertices, face, maxOrder));
+    }
+    const size_t nFaces = effectiveFaces.size();
+
+    for (int k = 0; k <= maxOrder; ++k) {
+        const double orderConst = pow((double)(k + 3), -1.);
+        for (int alpha = mnl::PSpace3D::SpaceDim(k - 1), maxAlpha = mnl::PSpace3D::SpaceDim(k); alpha < maxAlpha; ++alpha) {
+            const int dx = mnl::PSpace3D::D(alpha, 0), dy = mnl::PSpace3D::D(alpha, 1), dz = mnl::PSpace3D::D(alpha, 2);
+            const Eigen::Vector3d intGradAlpha(
+                (dx == -1 ? 0.0 : integrals[dx]),
+                (dy == -1 ? 0.0 : integrals[dy]),
+                (dz == -1 ? 0.0 : integrals[dz])
+            );
+            
+            for (size_t f{}; f < nFaces; ++f)
+                integrals[alpha] += (vertices[effectiveFaces[f][0]] - x0).dot(faceNormals[f]) * faceMonIntegrals[f][alpha];
+            
+            integrals[alpha] += intGradAlpha.dot(x0);
+            integrals[alpha] *= orderConst;
+        }
+    }
+
+    return integrals;
+}
+
+const double Polyhedron::Diameter(const std::vector<Eigen::Vector3d>& vertices)
+{
+    size_t nv = vertices.size();
+    double diameter = 0.0;
+    for (size_t i = 0; i < nv - 1; ++i)
+        for (size_t j = i + 1; j < nv; ++j)
+            diameter = std::max(diameter, (vertices[i] - vertices[j]).norm());
+    return diameter;
 }
