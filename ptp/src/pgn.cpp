@@ -1,4 +1,7 @@
 #include "pgn.h"
+
+#include "Eigen/Eigen/Dense"
+
 #include "mnl/include/mnl.hpp"
 #include "mnl/include/glq.hpp"
 
@@ -75,7 +78,7 @@ const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::
                             [ex, ey](const auto& pos) { return _pow(pos[0], ex) * _pow(pos[1], ey); });
                         return values.dot(w);
                     });
-                integrals[alpha] = partialIntegral.dot(edgeConstants) + (dx >= 0 ? x0(0) * integrals[dx] : 0.0) + (dy >= 0 ? x0(1) * integrals[dy] : 0.0);
+                integrals[alpha] = partialIntegral.dot(edgeConstants) + (dx >= 0 ? x0(0) * ex * integrals[dx] : 0.0) + (dy >= 0 ? x0(1) * ey * integrals[dy] : 0.0);
                 integrals[alpha] *= orderConst;
             }
         }
@@ -159,7 +162,7 @@ const std::vector<double> Polygon3D::MonomialIntegrals(const std::vector<Eigen::
                             [ex, ey, ez](const auto& pos) { return _pow(pos[0], ex) * _pow(pos[1], ey) * _pow(pos[2], ez); });
                         return values.dot(w);
                     });
-                integrals[alpha] = partialIntegral.dot(edgeConstants) + (dx >= 0 ? x0(0) * integrals[dx] : 0.0) + (dy >= 0 ? x0(1) * integrals[dy] : 0.0) + (dz >= 0 ? x0(2) * integrals[dz] : 0.0);
+                integrals[alpha] = partialIntegral.dot(edgeConstants) + (dx >= 0 ? x0(0) * ex * integrals[dx] : 0.0) + (dy >= 0 ? x0(1) * ey * integrals[dy] : 0.0) + (dz >= 0 ? x0(2) * ez * integrals[dz] : 0.0);
                 integrals[alpha] *= orderConst;
             }
         }
