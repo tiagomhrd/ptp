@@ -228,11 +228,12 @@ const std::vector<double> Polyhedron::MonomialIntegrals(const std::vector<Eigen:
     for (int k = 0; k <= maxOrder; ++k) {
         const double orderConst = pow((double)(k + 3), -1.);
         for (int alpha = mnl::PSpace3D::SpaceDim(k - 1), maxAlpha = mnl::PSpace3D::SpaceDim(k); alpha < maxAlpha; ++alpha) {
+            const int ex = mnl::PSpace3D::Exponent(alpha, 0), ey = mnl::PSpace3D::Exponent(alpha, 1), ez = mnl::PSpace3D::Exponent(alpha, 2);
             const int dx = mnl::PSpace3D::D(alpha, 0), dy = mnl::PSpace3D::D(alpha, 1), dz = mnl::PSpace3D::D(alpha, 2);
             const Eigen::Vector3d intGradAlpha(
-                (dx == -1 ? 0.0 : integrals[dx]),
-                (dy == -1 ? 0.0 : integrals[dy]),
-                (dz == -1 ? 0.0 : integrals[dz])
+                (dx == -1 ? 0.0 : ex * integrals[dx]),
+                (dy == -1 ? 0.0 : ey * integrals[dy]),
+                (dz == -1 ? 0.0 : ez * integrals[dz])
             );
             
             for (size_t f{}; f < nFaces; ++f)
@@ -254,4 +255,14 @@ const double Polyhedron::Diameter(const std::vector<Eigen::Vector3d>& vertices)
         for (size_t j = i + 1; j < nv; ++j)
             diameter = std::max(diameter, (vertices[i] - vertices[j]).norm());
     return diameter;
+}
+
+void Polyhedron::TranslateVertices(const Eigen::Vector3d& translation)
+{
+    std::transform(m_Vertices.cbegin(), m_Vertices.cend(), m_Vertices.begin(), [&translation](const auto& pos) { return pos + translation; });
+}
+
+void Polyhedron::RotateVertices(const Eigen::Matrix3d& Q)
+{
+    std::transform(m_Vertices.cbegin(), m_Vertices.cend(), m_Vertices.begin(), [&Q](const auto& pos) { return Q * pos; });
 }

@@ -55,6 +55,9 @@ public:
 
 	const std::vector<double> MonomialIntegrals(int maxOrder) const { return MonomialIntegrals(m_Vertices, m_Faces, maxOrder); }
 	const double Diameter() const { return Diameter(m_Vertices); }
+	void TranslateVertices(const Eigen::Vector3d& translation);
+	void RotateVertices(const Eigen::Matrix3d& Q);
+
 protected:
 	std::vector<Eigen::Vector3d> m_Vertices;
 	std::vector<std::vector<size_t>> m_Faces;
