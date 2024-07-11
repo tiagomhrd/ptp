@@ -97,6 +97,67 @@ const double Polygon2D::Diameter(const std::vector<Eigen::Vector2d>& vertices)
     return diameter;
 }
 
+static Eigen::Vector3d LineEquation(const Eigen::Vector2d& tau, const Eigen::Vector2d& point) {
+    return Eigen::Vector3d(tau(0) * point(1) - tau(1) * point(0), -tau(1), tau(0)).normalized();
+};
+static void RemoveColinear(std::vector<Eigen::Vector3d>& lines) {
+    if (lines.size() < 4)
+        return;
+
+    // Second step - remove repeated
+    for (auto it = lines.begin(), begin = it, end = lines.end(); it != end; ++it) {
+        for (auto it2 = it + 1; it2 != end; ++it2) {
+            if ((*it).dot(*it2) >= 1. - 1e-9) {
+                lines.erase(it2);
+                end = lines.end();
+                break;
+            }
+        }
+    }
+};
+const std::vector<Eigen::Vector3d> Polygon2D::UniqueSides(const std::vector<Eigen::Vector2d>& vertices)
+{
+    std::vector<Eigen::Vector3d> out;
+    const size_t nv = vertices.size();
+    out.reserve(nv);
+    
+    for (size_t v = 0; v < nv; ++v) {
+        out.push_back(LineEquation((vertices[(v + 1) % nv] - vertices[v]), vertices[v]));
+    }
+
+    if (nv == 3)
+        return out;
+
+    RemoveColinear(out);
+    return out;
+}
+
+const std::vector<Eigen::Vector3d> Polygon2D::UniqueReentrantSides(const std::vector<Eigen::Vector2d>& vertices)
+{
+    std::vector<Eigen::Vector3d> out;
+
+    const size_t nv = vertices.size();
+    out.reserve(nv);
+
+    // First step - sliding window of 3 vertices
+    for (size_t v = nv; v < 2 * nv; ++v) {
+        const auto prev = vertices[(v - 1) % nv],
+            curr = vertices[v % nv],
+            next = vertices[(v + 1) % nv];
+        const auto ni = Eigen::Vector2d(curr(1) - prev(1), prev(0) - curr(0));
+        const Eigen::Vector2d taui1 = next - curr;
+        if (ni.dot(taui1) > .0) {
+            out.push_back(LineEquation(curr - prev, curr));
+            out.push_back(LineEquation(taui1, curr));
+        }
+    }
+
+    // Second step - remove repeated
+    RemoveColinear(out);
+
+    return out;
+}
+
 static const Eigen::Matrix3d RodriguesTensor(const Eigen::Vector3d& axis, const double angleInRadians) {
     Eigen::Matrix3d skewTheta;
     skewTheta << 0, -axis[2], axis[1], axis(2), 0, -axis(0), -axis(1), axis(0), 0.0;
@@ -196,6 +257,12 @@ const Eigen::Vector3d Polygon3D::Normal(const std::vector<Eigen::Vector3d>& vert
     return (vertices[1]-vertices[0]).cross(vertices[2] - vertices[0]).normalized();
 }
 
+const Eigen::Vector4d Polygon3D::PlaneEquation(const std::vector<Eigen::Vector3d>& vertices)
+{
+    const Eigen::Vector3d normal = -Normal(vertices); // Minus sign to ensure this function takes positive values inside the polyhedron
+    return Eigen::Vector4d(normal.dot(vertices[0]), normal(0), normal(1), normal(2)).normalized();
+}
+
 const std::vector<Eigen::Vector3d> Polygon3D::GetVertices(const std::vector<Eigen::Vector3d>& polyhedronVertices, const std::vector<size_t>& faceIndices)
 {
     std::vector<Eigen::Vector3d> vertices;
@@ -255,6 +322,33 @@ const double Polyhedron::Diameter(const std::vector<Eigen::Vector3d>& vertices)
         for (size_t j = i + 1; j < nv; ++j)
             diameter = std::max(diameter, (vertices[i] - vertices[j]).norm());
     return diameter;
+}
+
+static void RemoveCoplanar(std::vector<Eigen::Vector4d>& planes) {
+    if (planes.size() < 5)
+        return;
+
+    // Second step - remove repeated
+    for (auto it = planes.begin(), begin = it, end = planes.end(); it != end; ++it) {
+        for (auto it2 = it + 1; it2 != end; ++it2) {
+            if ((*it).dot(*it2) >= 1. - 1e-9) {
+                planes.erase(it2);
+                end = planes.end();
+                break;
+            }
+        }
+    }
+}
+const std::vector<Eigen::Vector4d> Polyhedron::UniquePlanes(const std::vector<Eigen::Vector3d> vertices, const std::vector<std::vector<size_t>> faces)
+{
+    std::vector<Eigen::Vector4d> out;
+    out.reserve(faces.size());
+    for (const auto& face : faces)
+        out.push_back(Polygon3D::PlaneEquation(vertices, face));
+    
+    RemoveCoplanar(out);
+
+    return out;
 }
 
 void Polyhedron::TranslateVertices(const Eigen::Vector3d& translation)
