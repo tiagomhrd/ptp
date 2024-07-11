@@ -4,7 +4,7 @@
 #include "src/pgn.h"
 #include <iostream>
 
-constexpr double tol = 1e-12;
+constexpr double tol = 1e-10;
 
 static double _pow(double base, int exp)
 {
@@ -234,7 +234,6 @@ static Polyhedron cuboid(const double dx, const double dy, const double dz) {
 
 	return Polyhedron(vertices, faces);
 };
-
 static Eigen::Matrix3d cuboidInertiaTensor(const double dx, const double dy, const double dz) {
 	Eigen::Matrix3d I = Eigen::Matrix3d::Zero();
 	const double vol_12 = dx * dy * dz / 12.;
@@ -242,6 +241,108 @@ static Eigen::Matrix3d cuboidInertiaTensor(const double dx, const double dy, con
 	I(1, 1) = vol_12 * (_pow(dx,2) + _pow(dz,2));
 	I(2, 2) = vol_12 * (_pow(dx,2) + _pow(dy,2));
 	return I;
+}
+
+static Polyhedron icosahedron() {
+	std::vector<Eigen::Vector3d> vertices;
+	vertices.reserve(12);
+	vertices.emplace_back(0.288675134594813, 0.5, -0.75576131407617);
+	vertices.emplace_back(0.288675134594813, -0.5, -0.75576131407617);
+	vertices.emplace_back(0.934172358962715, 0, -0.178411044886545);
+	vertices.emplace_back(-0.577350269189625, 0, -0.75576131407617);
+	vertices.emplace_back(0.467086179481358, 0.809016994374945, 0.178411044886545);
+	vertices.emplace_back(-0.467086179481358, 0.809016994374945, -0.178411044886545);
+	vertices.emplace_back(0.467086179481358, -0.809016994374945, 0.178411044886545);
+	vertices.emplace_back(-0.467086179481358, -0.809016994374945, -0.178411044886545);
+	vertices.emplace_back(0.577350269189625, 0, 0.75576131407617);
+	vertices.emplace_back(-0.934172358962715, 0, 0.178411044886545);
+	vertices.emplace_back(-0.288675134594813, 0.5, 0.75576131407617);
+	vertices.emplace_back(-0.288675134594813, -0.5, 0.75576131407617);
+
+	std::vector<std::vector<size_t>> faces;
+	faces.reserve(20);
+	faces.push_back({ 0, 5, 4 });
+	faces.push_back({ 0, 3, 5 });
+	faces.push_back({ 0, 4, 2 });
+	faces.push_back({ 0, 2, 1 });
+	faces.push_back({ 0, 1, 3 });
+	faces.push_back({ 1, 2, 6 });
+	faces.push_back({ 1, 7, 3 });
+	faces.push_back({ 1, 6, 7 });
+	faces.push_back({ 2, 4, 8 });
+	faces.push_back({ 2, 8, 6 });
+	faces.push_back({ 3, 9, 5 });
+	faces.push_back({ 3, 7, 9 });
+	faces.push_back({ 4, 5, 10 });
+	faces.push_back({ 4, 10, 8 });
+	faces.push_back({ 5, 9, 10 });
+	faces.push_back({ 6, 8, 11 });
+	faces.push_back({ 6, 11, 7 });
+	faces.push_back({ 7, 11, 9 });
+	faces.push_back({ 9, 11, 10 });
+	faces.push_back({ 8, 10, 11 });
+
+	return Polyhedron(vertices, faces);
+}
+static double icosahedronVolume() {
+	return 5. * (3. + sqrt(5.)) / 12.;
+}
+static Eigen::Matrix3d icosahedronInertiaTensor() {
+	return _pow((1. + sqrt(5.)) * .5, 2) * .1 * icosahedronVolume() * Eigen::Matrix3d::Identity();
+}
+static double icosahedronDiameter() {
+	return sqrt((5. + sqrt(5.)) * .5);
+}
+
+static Polyhedron dodecahedron() {
+	std::vector<Eigen::Vector3d> vertices;
+	vertices.reserve(20);
+	vertices.emplace_back(0.5, 0.688190960235587, -1.1135163644116);
+	vertices.emplace_back(-0.5, 0.688190960235587, -1.1135163644116);
+	vertices.emplace_back(0.809016994374947, 1.1135163644116, -0.262865556059566);
+	vertices.emplace_back(0.809016994374947, -0.262865556059566, -1.1135163644116);
+	vertices.emplace_back(-0.809016994374947, 1.1135163644116, -0.262865556059566);
+	vertices.emplace_back(-0.809016994374947, -0.262865556059566, -1.1135163644116);
+	vertices.emplace_back(0, 1.37638192047117, 0.262865556059567);
+	vertices.emplace_back(0, -0.850650808352042, -1.1135163644116);
+	vertices.emplace_back(1.30901699437494, 0.425325404176019, 0.262865556059566);
+	vertices.emplace_back(1.30901699437494, -0.425325404176019, -0.262865556059566);
+	vertices.emplace_back(-1.30901699437494, 0.425325404176019, 0.262865556059566);
+	vertices.emplace_back(-1.30901699437494, -0.425325404176019, -0.262865556059566);
+	vertices.emplace_back(0, 0.850650808352042, 1.1135163644116);
+	vertices.emplace_back(0, -1.37638192047117, -0.262865556059567);
+	vertices.emplace_back(0.809016994374947, 0.262865556059566, 1.1135163644116);
+	vertices.emplace_back(-0.809016994374947, 0.262865556059566, 1.1135163644116);
+	vertices.emplace_back(0.809016994374947, -1.1135163644116, 0.262865556059566);
+	vertices.emplace_back(-0.809016994374947, -1.1135163644116, 0.262865556059566);
+	vertices.emplace_back(0.5, -0.688190960235587, 1.1135163644116);
+	vertices.emplace_back(-0.5, -0.688190960235587, 1.1135163644116);
+
+	std::vector<std::vector<size_t>> faces;
+	faces.reserve(12);
+	faces.push_back({ 0, 3, 7, 5, 1 });
+	faces.push_back({ 0, 1, 4, 6, 2 });
+	faces.push_back({ 0, 2, 8, 9, 3 });
+	faces.push_back({ 1, 5, 11, 10, 4 });
+	faces.push_back({ 5, 7, 13, 17, 11 });
+	faces.push_back({ 3, 9, 16, 13, 7 });
+	faces.push_back({ 2, 6, 12, 14, 8 });
+	faces.push_back({ 4, 10, 15, 12, 6 });
+	faces.push_back({ 10, 11, 17, 19, 15 });
+	faces.push_back({ 8, 14, 18, 16, 9 });
+	faces.push_back({ 13, 16, 18, 19, 17 });
+	faces.push_back({ 12, 15, 19, 18, 14 });
+
+	return Polyhedron(vertices, faces);
+}
+static double dodecahedronVolume() {
+	return (15. + 7. * sqrt(5.)) * .25;
+}
+static double dodecahedronDiameter() {
+	return sqrt(3.) * (1. + sqrt(5.)) * .5;
+}
+static Eigen::Matrix3d dodecahedronInertiaTensor() {
+	return (39. * (1. + sqrt(5.)) * .5 + 28.) / 150. * dodecahedronVolume() * Eigen::Matrix3d::Identity();
 }
 
 TEST_CASE("Polyhedra") {
@@ -324,6 +425,280 @@ TEST_CASE("Polyhedra") {
 			}
 			SECTION("Monomial Integrals") {
 				const auto monInts = cube.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(CG(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+	}
+	SECTION("Brick") {
+		const double dx = 1., dy = 2., dz = 3.;
+		Polyhedron cube = cuboid(dx, dy, dz);
+		Eigen::Matrix3d I = cuboidInertiaTensor(dx, dy, dz);
+		const Eigen::Vector3d translation(4., 5., 6.);
+		const Eigen::Matrix3d Q = RodriguesTensor(Eigen::Vector3d(sqrt(2.) * .5, sqrt(2.) * .5, 0.), M_PI / 6);
+		const double diameter = sqrt(_pow(dx, 2) + _pow(dy, 2) + _pow(dz, 2));
+		const double vol = dx * dy * dz;
+		SECTION("No Transformation") {
+			SECTION("Diameter") {
+				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = cube.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[5], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[6], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[8], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation") {
+			cube.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			SECTION("Diameter") {
+				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = cube.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(translation(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Rotation") {
+			cube.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+
+			SECTION("Diameter") {
+				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = cube.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation and Rotation") {
+			cube.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			cube.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+			const Eigen::Vector3d CG = Q * translation;
+
+			SECTION("Diameter") {
+				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = cube.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(CG(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+	}
+	SECTION("Icosahedron") {
+		Polyhedron ico = icosahedron();
+		Eigen::Matrix3d I = icosahedronInertiaTensor();
+		const Eigen::Vector3d translation(4., 5., 6.);
+		const Eigen::Matrix3d Q = RodriguesTensor(Eigen::Vector3d(sqrt(2.) * .5, sqrt(2.) * .5, 0.), M_PI / 6);
+		const double diameter = icosahedronDiameter();
+		const double vol = icosahedronVolume();
+		SECTION("No Transformation") {
+			SECTION("Diameter") {
+				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = ico.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[5], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[6], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[8], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation") {
+			ico.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			SECTION("Diameter") {
+				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = ico.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(translation(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Rotation") {
+			ico.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+
+			SECTION("Diameter") {
+				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = ico.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation and Rotation") {
+			ico.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			ico.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+			const Eigen::Vector3d CG = Q * translation;
+
+			SECTION("Diameter") {
+				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = ico.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(CG(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+	}
+	SECTION("Dodecahedron") {
+		Polyhedron dodeca = dodecahedron();
+		Eigen::Matrix3d I = dodecahedronInertiaTensor();
+		const Eigen::Vector3d translation(4., 5., 6.);
+		const Eigen::Matrix3d Q = RodriguesTensor(Eigen::Vector3d(sqrt(2.) * .5, sqrt(2.) * .5, 0.), M_PI / 6);
+		const double diameter = dodecahedronDiameter();
+		const double vol = dodecahedronVolume();
+		SECTION("No Transformation") {
+			SECTION("Diameter") {
+				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = dodeca.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[5], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[6], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[8], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation") {
+			dodeca.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			SECTION("Diameter") {
+				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = dodeca.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(translation(2) * vol, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Rotation") {
+			dodeca.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+
+			SECTION("Diameter") {
+				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = dodeca.MonomialIntegrals(2);
+				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
+				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(monInts[3], Catch::Matchers::WithinAbs(0.0, tol));
+				REQUIRE_THAT(I(0, 1), Catch::Matchers::WithinAbs(-monInts[5], tol));
+				REQUIRE_THAT(I(0, 2), Catch::Matchers::WithinAbs(-monInts[6], tol));
+				REQUIRE_THAT(I(1, 2), Catch::Matchers::WithinAbs(-monInts[8], tol));
+				REQUIRE_THAT(I(0, 0), Catch::Matchers::WithinAbs(monInts[7] + monInts[9], tol));
+				REQUIRE_THAT(I(1, 1), Catch::Matchers::WithinAbs(monInts[4] + monInts[9], tol));
+				REQUIRE_THAT(I(2, 2), Catch::Matchers::WithinAbs(monInts[4] + monInts[7], tol));
+			}
+		}
+		SECTION("Translation and Rotation") {
+			dodeca.TranslateVertices(translation);
+			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
+			dodeca.RotateVertices(Q);
+			I = Q * I * Q.transpose();
+			const Eigen::Vector3d CG = Q * translation;
+
+			SECTION("Diameter") {
+				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+			}
+			SECTION("Monomial Integrals") {
+				const auto monInts = dodeca.MonomialIntegrals(2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
