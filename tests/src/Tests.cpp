@@ -63,10 +63,10 @@ TEST_CASE("Polygon2D") {
 		SECTION(ss.str()) {
 			const auto poly = regularPolygon(nv);
 			SECTION("Diameter") {
-				REQUIRE_THAT(Polygon2D::Diameter(poly), Catch::Matchers::WithinAbs(regPolyDiameter(nv), tol));
+				REQUIRE_THAT(PTP::Polygon2D::Diameter(poly), Catch::Matchers::WithinAbs(regPolyDiameter(nv), tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = Polygon2D::MonomialIntegrals(poly, 2); 
+				const auto monInts = PTP::Polygon2D::MonomialIntegrals(poly, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(regPolyArea(nv), tol)); 
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -99,14 +99,6 @@ static std::vector<Eigen::Vector3d> regularPolygon3d(const int nv) {
 	return polygon;
 }
 
-static void rotatePolygon3D(std::vector<Eigen::Vector3d>& polygon, const Eigen::Matrix3d& rotMatrix) {
-	std::transform(polygon.cbegin(), polygon.cend(), polygon.begin(), [&rotMatrix](const auto& pos) { return rotMatrix * pos; });
-}
-
-static void translatePolygon3D(std::vector<Eigen::Vector3d>& polygon, const Eigen::Vector3d& trnslVec) {
-	std::transform(polygon.cbegin(), polygon.cend(), polygon.begin(), [&trnslVec](const auto& pos) { return pos + trnslVec; });
-}
-
 TEST_CASE("Polygon3D") {
 	std::stringstream ss;
 	const Eigen::Vector3d translation(1., 2., 3.);
@@ -120,10 +112,10 @@ TEST_CASE("Polygon3D") {
 			const double diameter = regPolyDiameter(nv);
 			SECTION("No Transformation") {
 				SECTION("Diameter") {
-					REQUIRE_THAT(Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
+					REQUIRE_THAT(PTP::Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
 				}
 				SECTION("Monomial Integrals") {
-					const auto monInts = Polygon3D::MonomialIntegrals(poly, 2);
+					const auto monInts = PTP::Polygon3D::MonomialIntegrals(poly, 2);
 					REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(area, tol));
 					REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 					REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -138,14 +130,14 @@ TEST_CASE("Polygon3D") {
 			}
 			
 			SECTION("Translation") {
-				translatePolygon3D(poly, translation);
+				PTP::Transform::TranslateVertices(poly, translation);
 				I += area * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
 
 				SECTION("Diameter") {
-					REQUIRE_THAT(Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
+					REQUIRE_THAT(PTP::Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
 				}				
 				SECTION("Monomial Integrals") {
-					const auto monInts = Polygon3D::MonomialIntegrals(poly, 2);
+					const auto monInts = PTP::Polygon3D::MonomialIntegrals(poly, 2);
 					REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(area, tol));
 					REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * area, tol));
 					REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * area, tol));
@@ -159,14 +151,14 @@ TEST_CASE("Polygon3D") {
 				}
 			}
 			SECTION("Rotation") {
-				rotatePolygon3D(poly, Q);
+				PTP::Transform::RotateVertices(poly, Q);
 				I = Q * I * Q.transpose();
 
 				SECTION("Diameter") {
-					REQUIRE_THAT(Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
+					REQUIRE_THAT(PTP::Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
 				}
 				SECTION("Monomial Integrals") {
-					const auto monInts = Polygon3D::MonomialIntegrals(poly, 2);
+					const auto monInts = PTP::Polygon3D::MonomialIntegrals(poly, 2);
 					REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(area, tol));
 					REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 					REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -181,17 +173,17 @@ TEST_CASE("Polygon3D") {
 
 			}
 			SECTION("Translation and Rotation") {
-				translatePolygon3D(poly, translation);
+				PTP::Transform::TranslateVertices(poly, translation);
 				I += area * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
-				rotatePolygon3D(poly, Q);
+				PTP::Transform::RotateVertices(poly, Q);
 				I = Q * I * Q.transpose();
 				const Eigen::Vector3d CG = Q * translation;
 
 				SECTION("Diameter") {
-					REQUIRE_THAT(Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
+					REQUIRE_THAT(PTP::Polygon3D::Diameter(poly), Catch::Matchers::WithinAbs(diameter, tol));
 				}
 				SECTION("Monomial Integrals") {
-					const auto monInts = Polygon3D::MonomialIntegrals(poly, 2);
+					const auto monInts = PTP::Polygon3D::MonomialIntegrals(poly, 2);
 					REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(area, tol));
 					REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * area, tol));
 					REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * area, tol));
@@ -209,30 +201,34 @@ TEST_CASE("Polygon3D") {
 	}
 }
 
+struct Polyhedron {
+	std::vector<Eigen::Vector3d> vertices;
+	std::vector<std::vector<size_t>> faces;
+};
+
 static Polyhedron cuboid(const double dx, const double dy, const double dz) {
 	const double hdx = .5 * dx, hdy = .5 * dy, hdz = .5 * dz;
+	Polyhedron poly;
+	
+	poly.vertices.reserve(8);
+	poly.vertices.emplace_back(-hdx, -hdy, -hdz);
+	poly.vertices.emplace_back(+hdx, -hdy, -hdz);
+	poly.vertices.emplace_back(+hdx, +hdy, -hdz);
+	poly.vertices.emplace_back(-hdx, +hdy, -hdz);
+	poly.vertices.emplace_back(-hdx, -hdy, +hdz);
+	poly.vertices.emplace_back(+hdx, -hdy, +hdz);
+	poly.vertices.emplace_back(+hdx, +hdy, +hdz);
+	poly.vertices.emplace_back(-hdx, +hdy, +hdz);
 
-	std::vector<Eigen::Vector3d> vertices;
-	vertices.reserve(8);
-	vertices.emplace_back(-hdx, -hdy, -hdz);
-	vertices.emplace_back(+hdx, -hdy, -hdz);
-	vertices.emplace_back(+hdx, +hdy, -hdz);
-	vertices.emplace_back(-hdx, +hdy, -hdz);
-	vertices.emplace_back(-hdx, -hdy, +hdz);
-	vertices.emplace_back(+hdx, -hdy, +hdz);
-	vertices.emplace_back(+hdx, +hdy, +hdz);
-	vertices.emplace_back(-hdx, +hdy, +hdz);
+	poly.faces.reserve(6);
+	poly.faces.push_back({0, 4, 7, 3}); // -x
+	poly.faces.push_back({1, 2, 6, 5}); // +x
+	poly.faces.push_back({0, 1, 5, 4}); // -y
+	poly.faces.push_back({2, 3, 7, 6}); // +y
+	poly.faces.push_back({0, 3, 2, 1}); // -z
+	poly.faces.push_back({4, 5, 6, 7}); // +z
 
-	std::vector<std::vector<size_t>> faces;
-	faces.reserve(6);
-	faces.push_back({0, 4, 7, 3}); // -x
-	faces.push_back({1, 2, 6, 5}); // +x
-	faces.push_back({0, 1, 5, 4}); // -y
-	faces.push_back({2, 3, 7, 6}); // +y
-	faces.push_back({0, 3, 2, 1}); // -z
-	faces.push_back({4, 5, 6, 7}); // +z
-
-	return Polyhedron(vertices, faces);
+	return poly;
 };
 static Eigen::Matrix3d cuboidInertiaTensor(const double dx, const double dy, const double dz) {
 	Eigen::Matrix3d I = Eigen::Matrix3d::Zero();
@@ -244,45 +240,45 @@ static Eigen::Matrix3d cuboidInertiaTensor(const double dx, const double dy, con
 }
 
 static Polyhedron icosahedron() {
-	std::vector<Eigen::Vector3d> vertices;
-	vertices.reserve(12);
-	vertices.emplace_back(0.288675134594813, 0.5, -0.75576131407617);
-	vertices.emplace_back(0.288675134594813, -0.5, -0.75576131407617);
-	vertices.emplace_back(0.934172358962715, 0, -0.178411044886545);
-	vertices.emplace_back(-0.577350269189625, 0, -0.75576131407617);
-	vertices.emplace_back(0.467086179481358, 0.809016994374945, 0.178411044886545);
-	vertices.emplace_back(-0.467086179481358, 0.809016994374945, -0.178411044886545);
-	vertices.emplace_back(0.467086179481358, -0.809016994374945, 0.178411044886545);
-	vertices.emplace_back(-0.467086179481358, -0.809016994374945, -0.178411044886545);
-	vertices.emplace_back(0.577350269189625, 0, 0.75576131407617);
-	vertices.emplace_back(-0.934172358962715, 0, 0.178411044886545);
-	vertices.emplace_back(-0.288675134594813, 0.5, 0.75576131407617);
-	vertices.emplace_back(-0.288675134594813, -0.5, 0.75576131407617);
+	Polyhedron poly;
 
-	std::vector<std::vector<size_t>> faces;
-	faces.reserve(20);
-	faces.push_back({ 0, 5, 4 });
-	faces.push_back({ 0, 3, 5 });
-	faces.push_back({ 0, 4, 2 });
-	faces.push_back({ 0, 2, 1 });
-	faces.push_back({ 0, 1, 3 });
-	faces.push_back({ 1, 2, 6 });
-	faces.push_back({ 1, 7, 3 });
-	faces.push_back({ 1, 6, 7 });
-	faces.push_back({ 2, 4, 8 });
-	faces.push_back({ 2, 8, 6 });
-	faces.push_back({ 3, 9, 5 });
-	faces.push_back({ 3, 7, 9 });
-	faces.push_back({ 4, 5, 10 });
-	faces.push_back({ 4, 10, 8 });
-	faces.push_back({ 5, 9, 10 });
-	faces.push_back({ 6, 8, 11 });
-	faces.push_back({ 6, 11, 7 });
-	faces.push_back({ 7, 11, 9 });
-	faces.push_back({ 9, 11, 10 });
-	faces.push_back({ 8, 10, 11 });
+	poly.vertices.reserve(12);
+	poly.vertices.emplace_back(0.288675134594813, 0.5, -0.75576131407617);
+	poly.vertices.emplace_back(0.288675134594813, -0.5, -0.75576131407617);
+	poly.vertices.emplace_back(0.934172358962715, 0, -0.178411044886545);
+	poly.vertices.emplace_back(-0.577350269189625, 0, -0.75576131407617);
+	poly.vertices.emplace_back(0.467086179481358, 0.809016994374945, 0.178411044886545);
+	poly.vertices.emplace_back(-0.467086179481358, 0.809016994374945, -0.178411044886545);
+	poly.vertices.emplace_back(0.467086179481358, -0.809016994374945, 0.178411044886545);
+	poly.vertices.emplace_back(-0.467086179481358, -0.809016994374945, -0.178411044886545);
+	poly.vertices.emplace_back(0.577350269189625, 0, 0.75576131407617);
+	poly.vertices.emplace_back(-0.934172358962715, 0, 0.178411044886545);
+	poly.vertices.emplace_back(-0.288675134594813, 0.5, 0.75576131407617);
+	poly.vertices.emplace_back(-0.288675134594813, -0.5, 0.75576131407617);
 
-	return Polyhedron(vertices, faces);
+	poly.faces.reserve(20);
+	poly.faces.push_back({ 0, 5, 4 });
+	poly.faces.push_back({ 0, 3, 5 });
+	poly.faces.push_back({ 0, 4, 2 });
+	poly.faces.push_back({ 0, 2, 1 });
+	poly.faces.push_back({ 0, 1, 3 });
+	poly.faces.push_back({ 1, 2, 6 });
+	poly.faces.push_back({ 1, 7, 3 });
+	poly.faces.push_back({ 1, 6, 7 });
+	poly.faces.push_back({ 2, 4, 8 });
+	poly.faces.push_back({ 2, 8, 6 });
+	poly.faces.push_back({ 3, 9, 5 });
+	poly.faces.push_back({ 3, 7, 9 });
+	poly.faces.push_back({ 4, 5, 10 });
+	poly.faces.push_back({ 4, 10, 8 });
+	poly.faces.push_back({ 5, 9, 10 });
+	poly.faces.push_back({ 6, 8, 11 });
+	poly.faces.push_back({ 6, 11, 7 });
+	poly.faces.push_back({ 7, 11, 9 });
+	poly.faces.push_back({ 9, 11, 10 });
+	poly.faces.push_back({ 8, 10, 11 });
+
+	return poly;
 }
 static double icosahedronVolume() {
 	return 5. * (3. + sqrt(5.)) / 12.;
@@ -295,45 +291,45 @@ static double icosahedronDiameter() {
 }
 
 static Polyhedron dodecahedron() {
-	std::vector<Eigen::Vector3d> vertices;
-	vertices.reserve(20);
-	vertices.emplace_back(0.5, 0.688190960235587, -1.1135163644116);
-	vertices.emplace_back(-0.5, 0.688190960235587, -1.1135163644116);
-	vertices.emplace_back(0.809016994374947, 1.1135163644116, -0.262865556059566);
-	vertices.emplace_back(0.809016994374947, -0.262865556059566, -1.1135163644116);
-	vertices.emplace_back(-0.809016994374947, 1.1135163644116, -0.262865556059566);
-	vertices.emplace_back(-0.809016994374947, -0.262865556059566, -1.1135163644116);
-	vertices.emplace_back(0, 1.37638192047117, 0.262865556059567);
-	vertices.emplace_back(0, -0.850650808352042, -1.1135163644116);
-	vertices.emplace_back(1.30901699437494, 0.425325404176019, 0.262865556059566);
-	vertices.emplace_back(1.30901699437494, -0.425325404176019, -0.262865556059566);
-	vertices.emplace_back(-1.30901699437494, 0.425325404176019, 0.262865556059566);
-	vertices.emplace_back(-1.30901699437494, -0.425325404176019, -0.262865556059566);
-	vertices.emplace_back(0, 0.850650808352042, 1.1135163644116);
-	vertices.emplace_back(0, -1.37638192047117, -0.262865556059567);
-	vertices.emplace_back(0.809016994374947, 0.262865556059566, 1.1135163644116);
-	vertices.emplace_back(-0.809016994374947, 0.262865556059566, 1.1135163644116);
-	vertices.emplace_back(0.809016994374947, -1.1135163644116, 0.262865556059566);
-	vertices.emplace_back(-0.809016994374947, -1.1135163644116, 0.262865556059566);
-	vertices.emplace_back(0.5, -0.688190960235587, 1.1135163644116);
-	vertices.emplace_back(-0.5, -0.688190960235587, 1.1135163644116);
+	Polyhedron poly;
+	
+	poly.vertices.reserve(20);
+	poly.vertices.emplace_back(0.5, 0.688190960235587, -1.1135163644116);
+	poly.vertices.emplace_back(-0.5, 0.688190960235587, -1.1135163644116);
+	poly.vertices.emplace_back(0.809016994374947, 1.1135163644116, -0.262865556059566);
+	poly.vertices.emplace_back(0.809016994374947, -0.262865556059566, -1.1135163644116);
+	poly.vertices.emplace_back(-0.809016994374947, 1.1135163644116, -0.262865556059566);
+	poly.vertices.emplace_back(-0.809016994374947, -0.262865556059566, -1.1135163644116);
+	poly.vertices.emplace_back(0, 1.37638192047117, 0.262865556059567);
+	poly.vertices.emplace_back(0, -0.850650808352042, -1.1135163644116);
+	poly.vertices.emplace_back(1.30901699437494, 0.425325404176019, 0.262865556059566);
+	poly.vertices.emplace_back(1.30901699437494, -0.425325404176019, -0.262865556059566);
+	poly.vertices.emplace_back(-1.30901699437494, 0.425325404176019, 0.262865556059566);
+	poly.vertices.emplace_back(-1.30901699437494, -0.425325404176019, -0.262865556059566);
+	poly.vertices.emplace_back(0, 0.850650808352042, 1.1135163644116);
+	poly.vertices.emplace_back(0, -1.37638192047117, -0.262865556059567);
+	poly.vertices.emplace_back(0.809016994374947, 0.262865556059566, 1.1135163644116);
+	poly.vertices.emplace_back(-0.809016994374947, 0.262865556059566, 1.1135163644116);
+	poly.vertices.emplace_back(0.809016994374947, -1.1135163644116, 0.262865556059566);
+	poly.vertices.emplace_back(-0.809016994374947, -1.1135163644116, 0.262865556059566);
+	poly.vertices.emplace_back(0.5, -0.688190960235587, 1.1135163644116);
+	poly.vertices.emplace_back(-0.5, -0.688190960235587, 1.1135163644116);
+	
+	poly.faces.reserve(12);
+	poly.faces.push_back({ 0, 3, 7, 5, 1 });
+	poly.faces.push_back({ 0, 1, 4, 6, 2 });
+	poly.faces.push_back({ 0, 2, 8, 9, 3 });
+	poly.faces.push_back({ 1, 5, 11, 10, 4 });
+	poly.faces.push_back({ 5, 7, 13, 17, 11 });
+	poly.faces.push_back({ 3, 9, 16, 13, 7 });
+	poly.faces.push_back({ 2, 6, 12, 14, 8 });
+	poly.faces.push_back({ 4, 10, 15, 12, 6 });
+	poly.faces.push_back({ 10, 11, 17, 19, 15 });
+	poly.faces.push_back({ 8, 14, 18, 16, 9 });
+	poly.faces.push_back({ 13, 16, 18, 19, 17 });
+	poly.faces.push_back({ 12, 15, 19, 18, 14 });
 
-	std::vector<std::vector<size_t>> faces;
-	faces.reserve(12);
-	faces.push_back({ 0, 3, 7, 5, 1 });
-	faces.push_back({ 0, 1, 4, 6, 2 });
-	faces.push_back({ 0, 2, 8, 9, 3 });
-	faces.push_back({ 1, 5, 11, 10, 4 });
-	faces.push_back({ 5, 7, 13, 17, 11 });
-	faces.push_back({ 3, 9, 16, 13, 7 });
-	faces.push_back({ 2, 6, 12, 14, 8 });
-	faces.push_back({ 4, 10, 15, 12, 6 });
-	faces.push_back({ 10, 11, 17, 19, 15 });
-	faces.push_back({ 8, 14, 18, 16, 9 });
-	faces.push_back({ 13, 16, 18, 19, 17 });
-	faces.push_back({ 12, 15, 19, 18, 14 });
-
-	return Polyhedron(vertices, faces);
+	return poly;
 }
 static double dodecahedronVolume() {
 	return (15. + 7. * sqrt(5.)) * .25;
@@ -356,10 +352,10 @@ TEST_CASE("Polyhedra") {
 		const double vol = dx * dy * dz;
 		SECTION("No Transformation") {
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -373,13 +369,13 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation") {
-			cube.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(cube.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
@@ -393,14 +389,14 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Rotation") {
-			cube.RotateVertices(Q);
+			PTP::Transform::RotateVertices(cube.vertices, Q);
 			I = Q * I * Q.transpose();
 
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -414,17 +410,17 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation and Rotation") {
-			cube.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(cube.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
-			cube.RotateVertices(Q);
+			PTP::Transform::RotateVertices(cube.vertices, Q);
 			I = Q * I * Q.transpose();
 			const Eigen::Vector3d CG = Q * translation;
 
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
@@ -448,10 +444,10 @@ TEST_CASE("Polyhedra") {
 		const double vol = dx * dy * dz;
 		SECTION("No Transformation") {
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -465,13 +461,13 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation") {
-			cube.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(cube.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
@@ -485,14 +481,14 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Rotation") {
-			cube.RotateVertices(Q);
+			PTP::Transform::RotateVertices(cube.vertices, Q);
 			I = Q * I * Q.transpose();
 
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -506,17 +502,17 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation and Rotation") {
-			cube.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(cube.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
-			cube.RotateVertices(Q);
+			PTP::Transform::RotateVertices(cube.vertices, Q);
 			I = Q * I * Q.transpose();
 			const Eigen::Vector3d CG = Q * translation;
 
 			SECTION("Diameter") {
-				REQUIRE(cube.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(cube.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = cube.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(cube.vertices, cube.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
@@ -539,10 +535,10 @@ TEST_CASE("Polyhedra") {
 		const double vol = icosahedronVolume();
 		SECTION("No Transformation") {
 			SECTION("Diameter") {
-				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(ico.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = ico.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(ico.vertices, ico.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -556,13 +552,13 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation") {
-			ico.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(ico.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
 			SECTION("Diameter") {
-				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(ico.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = ico.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(ico.vertices, ico.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
@@ -576,14 +572,14 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Rotation") {
-			ico.RotateVertices(Q);
+			PTP::Transform::RotateVertices(ico.vertices, Q);
 			I = Q * I * Q.transpose();
 
 			SECTION("Diameter") {
-				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(ico.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = ico.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(ico.vertices, ico.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -597,17 +593,17 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation and Rotation") {
-			ico.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(ico.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
-			ico.RotateVertices(Q);
+			PTP::Transform::RotateVertices(ico.vertices, Q);
 			I = Q * I * Q.transpose();
 			const Eigen::Vector3d CG = Q * translation;
 
 			SECTION("Diameter") {
-				REQUIRE(ico.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(ico.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = ico.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(ico.vertices, ico.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
@@ -621,6 +617,7 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 	}
+
 	SECTION("Dodecahedron") {
 		Polyhedron dodeca = dodecahedron();
 		Eigen::Matrix3d I = dodecahedronInertiaTensor();
@@ -630,10 +627,10 @@ TEST_CASE("Polyhedra") {
 		const double vol = dodecahedronVolume();
 		SECTION("No Transformation") {
 			SECTION("Diameter") {
-				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(dodeca.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = dodeca.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(dodeca.vertices, dodeca.faces, 2);
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -647,13 +644,14 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation") {
-			dodeca.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(dodeca.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
 			SECTION("Diameter") {
-				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(dodeca.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = dodeca.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(dodeca.vertices, dodeca.faces, 2);
+
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(translation(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(translation(1) * vol, tol));
@@ -667,14 +665,15 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Rotation") {
-			dodeca.RotateVertices(Q);
+			PTP::Transform::RotateVertices(dodeca.vertices, Q);
 			I = Q * I * Q.transpose();
 
 			SECTION("Diameter") {
-				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(dodeca.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = dodeca.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(dodeca.vertices, dodeca.faces, 2);
+
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(0.0, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(0.0, tol));
@@ -688,17 +687,18 @@ TEST_CASE("Polyhedra") {
 			}
 		}
 		SECTION("Translation and Rotation") {
-			dodeca.TranslateVertices(translation);
+			PTP::Transform::TranslateVertices(dodeca.vertices, translation);
 			I += vol * (translation.dot(translation) * Eigen::Matrix3d::Identity() - translation * translation.transpose());
-			dodeca.RotateVertices(Q);
+			PTP::Transform::RotateVertices(dodeca.vertices, Q);
 			I = Q * I * Q.transpose();
 			const Eigen::Vector3d CG = Q * translation;
 
 			SECTION("Diameter") {
-				REQUIRE(dodeca.Diameter() == Catch::Approx(diameter));
+				REQUIRE_THAT(PTP::Polyhedron::Diameter(dodeca.vertices), Catch::Matchers::WithinAbs(diameter, tol));
 			}
 			SECTION("Monomial Integrals") {
-				const auto monInts = dodeca.MonomialIntegrals(2);
+				const auto monInts = PTP::Polyhedron::MonomialIntegrals(dodeca.vertices, dodeca.faces, 2);
+
 				REQUIRE_THAT(monInts[0], Catch::Matchers::WithinAbs(vol, tol));
 				REQUIRE_THAT(monInts[1], Catch::Matchers::WithinAbs(CG(0) * vol, tol));
 				REQUIRE_THAT(monInts[2], Catch::Matchers::WithinAbs(CG(1) * vol, tol));
