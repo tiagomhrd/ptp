@@ -1,4 +1,5 @@
 project "tests"
+	location "../build"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++latest"

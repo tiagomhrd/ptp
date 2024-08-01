@@ -1,11 +1,12 @@
 project "ptp"
+	location "../build"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++latest"
 	staticruntime "on"
 
-	targetdir ("build/bin/" .. outputdir .. "%{prj.name}")
-	objdir ("build/bin-int/" .. outputdir .. "%{prj.name}")
+	targetdir ("../build/bin/" .. outputdir .. "%{prj.name}")
+	objdir ("../build/bin-int/" .. outputdir .. "%{prj.name}")
 
 	files
 	{

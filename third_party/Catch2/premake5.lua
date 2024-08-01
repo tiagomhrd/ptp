@@ -1,4 +1,5 @@
 project "Catch2"
+	location "../../build"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++14"

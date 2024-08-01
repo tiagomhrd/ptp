@@ -1,4 +1,5 @@
 workspace "ptp"
+	location "build"
 	configurations {"Debug", "Release", "Distribute"}
 	platforms{"x64"}
 	startproject "tests"
