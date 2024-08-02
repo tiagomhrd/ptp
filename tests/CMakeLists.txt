@@ -6,7 +6,7 @@ add_executable(${PROJECT_NAME}
 ${CMAKE_CURRENT_SOURCE_DIR}/src/Tests.cpp 
 )
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 
 target_include_directories(${PROJECT_NAME} 
 PRIVATE src  ../ptp ../third_party/Catch2/ ../third_party/ 

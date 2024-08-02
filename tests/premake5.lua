@@ -2,7 +2,7 @@ project "tests"
 	location "../build"
 	kind "ConsoleApp"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++14"
 	staticruntime "on"
 	systemversion "latest"
 

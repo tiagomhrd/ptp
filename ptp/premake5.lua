@@ -2,7 +2,7 @@ project "ptp"
 	location "../build"
 	kind "StaticLib"
 	language "C++"
-	cppdialect "C++latest"
+	cppdialect "C++14"
 	staticruntime "on"
 
 	targetdir ("../build/bin/" .. outputdir .. "%{prj.name}")
