@@ -71,7 +71,7 @@ This boundary information is necessary for high-order serendipity formulations o
 
 ## Installation Instructions
 
-The whole project is written in C++, and the core files are compatible with `C++14`.
+The whole project is written in C++, and the core files are compatible with `C++17`.
 
 Inside the `ptp` folder you can find premake (`premake.lua`) and CMake (`CMakeLists.txt`) files that can generate project files to compile this to a static library.
 
