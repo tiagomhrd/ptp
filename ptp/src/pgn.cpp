@@ -47,7 +47,7 @@ namespace PTP {
             }();
 
 
-            for (int n = 1, ngMax = ceil((maxOrder + 1.) * .5); n <= ngMax; ++n) {
+            for (int n = 1, ngMax = (int)ceil((maxOrder + 1.) * .5); n <= ngMax; ++n) {
                 // Initialize quadrature structures
                 const auto quadrature = mnl::GaussLegendreR(2 * n - 1);
                 const size_t ng = quadrature.size();
@@ -189,7 +189,7 @@ namespace PTP {
             }();
 
 
-            for (int n = 1, ngMax = ceil((maxOrder + 1.) * .5); n <= ngMax; ++n) {
+            for (int n = 1, ngMax = (int)ceil((maxOrder + 1.) * .5); n <= ngMax; ++n) {
                 // Initialize quadrature structures
                 const auto quadrature = mnl::GaussLegendreR(2 * n - 1);
                 const size_t ng = quadrature.size();
