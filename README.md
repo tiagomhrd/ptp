@@ -78,7 +78,7 @@ Inside the `ptp` folder you can find premake (`premake.lua`) and CMake (`CMakeLi
 Feel free to clone the project or add as a submodule to your repository, but don't forget to do so recursively, as [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) and [Mnl](https://github.com/tiagomhrd/mnl) are submodules.
 
 ```bash
-git clone https://github.com/tiagomhrd/ptp.git --recursive
+git clone --recursive https://github.com/tiagomhrd/ptp.git
 ```
 
 ### Dependencies
