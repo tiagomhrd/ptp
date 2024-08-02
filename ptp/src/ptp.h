@@ -1,9 +1,10 @@
 #pragma once
-#ifndef PTP_PGN
-#define PTP_PGN
-#include "Eigen/Eigen/Core"
+#ifndef PTP
+#define PTP
+#include <Eigen/Eigen/Core>
+#include <vector>
 
-namespace PTP {
+namespace ptp {
 	namespace Polygon2D {
 		const std::vector<double> MonomialIntegrals(const std::vector<Eigen::Vector2d>& vertices, const int maxOrder);
 		const double Diameter(const std::vector<Eigen::Vector2d>& vertices);

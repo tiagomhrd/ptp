@@ -1,9 +1,9 @@
-#include "pgn.h"
+#include "ptp.h"
 
-#include "Eigen/Eigen/Dense"
-
-#include "mnl/include/mnl.hpp"
-#include "mnl/include/glq.hpp"
+#include <algorithm>
+#include <Eigen/Eigen/Dense>
+#include <mnl/include/mnl.hpp>
+#include <mnl/include/glq.hpp>
 
 #ifndef M_PI2
 #define M_PI2 1.570796326794897
@@ -25,8 +25,7 @@ static double _pow(double base, int exp)
     return result;
 }
 
-namespace PTP {
-
+namespace ptp {
     const std::vector<double> Polygon2D::MonomialIntegrals(const std::vector<Eigen::Vector2d>& vertices, const int maxOrder)
     {
         std::vector<double> integrals(mnl::PSpace2D::SpaceDim(maxOrder));
@@ -56,7 +55,8 @@ namespace PTP {
                 for (auto& vec : edgeGaussPos) {
                     vec.reserve(ng);
                 }
-                for (size_t g{}; const auto & [xig, wg] : quadrature) {
+                size_t g{};
+                for (const auto & [xig, wg] : quadrature) {
                     w(g) = wg;
                     for (size_t e = 1; e <= nv - 2; ++e) {
                         edgeGaussPos[e - 1].push_back(vertices[e] * (1 - xig) + vertices[e + 1] * xig);
@@ -198,7 +198,8 @@ namespace PTP {
                 for (auto& vec : edgeGaussPos) {
                     vec.reserve(ng);
                 }
-                for (size_t g{}; const auto & [xig, wg] : quadrature) {
+                size_t g{};
+                for (const auto & [xig, wg] : quadrature) {
                     w(g) = wg;
                     for (size_t e = 1; e <= nv - 2; ++e) {
                         edgeGaussPos[e - 1].push_back(vertices[e] * (1 - xig) + vertices[e + 1] * xig);
@@ -351,4 +352,4 @@ namespace PTP {
     {
         std::transform(vertices.cbegin(), vertices.cend(), vertices.begin(), [&Q](const auto& pos) { return Q * pos; });
     }
-};
+}
