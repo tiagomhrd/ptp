@@ -1,3 +1,11 @@
+/**********************************************************************************************************************************
+                                        Polytopes (PTP) Library by Tiago Fernandes Moherdaui
+
+        This library provides polygon and polyhedra-related services aimed at implementations of the virtual element method.
+		It relies on the monomial indexing proposed and implemented in the sibling library MNL (https://github.com/tiagomhrd/mnl)
+            
+**********************************************************************************************************************************/
+
 #include "ptp.h"
 
 #include <algorithm>
