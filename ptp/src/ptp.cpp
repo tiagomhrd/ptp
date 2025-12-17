@@ -9,6 +9,8 @@
 #include "ptp.h"
 
 #include <algorithm>
+#include <numeric>
+
 #include <Eigen/Eigen/Dense>
 #include <mnl/include/mnl.hpp>
 #include <mnl/include/glq.hpp>
@@ -165,6 +167,125 @@ namespace ptp {
         // Second step - remove repeated
         RemoveColinear(out);
 
+        return out;
+    }
+
+    int Orientation(const Eigen::Vector2d& p0, const Eigen::Vector2d& p1, const Eigen::Vector2d& p2){
+        //This was adapted from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+        // Tolerance for detecting colinearity
+        constexpr double tol = 1e-6;
+
+        const Eigen::Vector2d p1p0 = p1 - p0 , p2p1 = p2 - p1;
+        double aux = p1p0[1] * p2p1[0] - p1p0[0] * p2p1[1];
+
+        if (aux > tol) 
+            return 1;
+        if (aux < -tol) 
+            return 2;
+        return 0;
+    }
+
+    bool LinesIntersect(const std::array<Eigen::Vector2d, 2>& one, const std::array<Eigen::Vector2d, 2>& other) {
+        // This algorithm was adapted from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+        // This is performed with orientation checks
+        int o1 = Orientation(one[0], one[1], other[0]);
+        int o2 = Orientation(one[0], one[1], other[1]);
+        int o3 = Orientation(other[0], other[1], one[0]);
+        int o4 = Orientation(other[0], other[1], one[1]);
+
+        // Specific check for Diagonals
+        // If any point is collinear, this means the diagonal connects to an extremity, therefore there is no intersection.
+        if (o1 * o2 * o3 * o4 == 0)
+            return false;
+
+        if (o1 != o2 && o3 != o4)
+            return true;
+
+        return false;
+    }
+
+    bool IsDiagonal(const std::vector<Eigen::Vector2d>& polygon, const std::array<Eigen::Vector2d, 2>& line){
+        const size_t nv = polygon.size();
+        std::vector<std::array<Eigen::Vector2d, 2>> edges;
+        edges.reserve(nv);
+        for (size_t i{}; i < nv - 1; ++i)
+            edges.emplace_back(std::initializer_list<Eigen::Vector2d>{polygon[i], polygon[i + 1]});
+        
+        auto IntersectsWithLine = [&line](const auto& edge){ return LinesIntersect(line, edge); };
+        return std::none_of(edges.cbegin(), edges.cend(), IntersectsWithLine);
+    }
+
+    /* This is an implementation of the Ear Clipping algorithm for polygon triangulation */
+    const std::vector<std::array<size_t, 3>> Polygon2D::Triangulation(const std::vector<Eigen::Vector2d> &vertices)
+    {
+        std::vector<std::array<size_t, 3>> out;
+        out.reserve(vertices.size() - size_t{2});
+
+        // Setup tolerances
+        constexpr double areaTolerance = 1e-3; // Maybe take this as an optional parameter
+        const double thisArea = MonomialIntegrals(vertices, 0)[0];
+        const double tolerableArea = thisArea * areaTolerance;
+        
+        // Vector tracking indices of remaining vertices
+        std::vector<size_t> indices(vertices.size());
+        std::iota(std::begin(indices), std::end(indices), 0);
+
+        // Auxiliar Lambdas
+        auto GetPointLambda = [&vertices](const size_t i) { return vertices[i]; };
+        auto GetTrialEarLambda = [&indices, &GetPointLambda](const std::array<size_t, 3>& indices) {
+            std::vector<Eigen::Vector2d> trialEar;
+            trialEar.reserve(3);
+            std::transform(indices.cbegin(), indices.cend(), std::back_inserter(trialEar), GetPointLambda);
+            return trialEar;
+        };
+
+        size_t start = 0;
+        while (indices.size() > 3) {
+            // Get remaining polygon
+            const auto nv = indices.size();
+            std::vector<Eigen::Vector2d> vanGogh;
+            vanGogh.reserve(indices.size());
+            std::transform(indices.cbegin(), indices.cend(), std::back_inserter(vanGogh), GetPointLambda);
+
+            // Get trial ear
+            const std::array<size_t, 3> earIndices{ indices[start], indices[(start + 1) % nv], indices[(start + 2) % nv] };
+            const std::vector<Eigen::Vector2d> trialEar = GetTrialEarLambda(earIndices);
+            const std::array<Eigen::Vector2d, 2> trialDiagonal{trialEar[0], trialEar[2]};
+            
+            // Check criteria
+            const double earArea = MonomialIntegrals(trialEar, 0)[0];
+            
+            // Colinear edges
+            if (abs(earArea) < tolerableArea){
+                // Remove middle node and try again
+                const auto& earTipIterator = std::find(indices.cbegin(), indices.cend(), earIndices[1]);
+                indices.erase(earTipIterator);
+                start %= (nv - 1);
+                continue;
+            }
+
+            // Not a valid diagonal.
+            if (earArea < 0.0) {
+                start = (start + 1) % nv;
+                continue;
+            }
+
+            // Reaching here implies earArea > tolerableArea
+            // Check if trialDiagonal intersects any of the edges
+            if (IsDiagonal(vanGogh, trialDiagonal)) {
+                out.emplace_back(std::move(earIndices));
+                const auto& earTipIterator = std::find(indices.cbegin(), indices.cend(), earIndices[1]);
+                indices.erase(earTipIterator);
+                start %= (nv - 1);
+                continue;
+            }
+
+            // If intersects any edge, try the next ear.
+            start = (start + 1) % nv;
+        }
+
+        // Reaching here means only one triangle is left in indices.
+        out.emplace_back(std::initializer_list{ indices[0], indices[1], indices[2] });
         return out;
     }
 
