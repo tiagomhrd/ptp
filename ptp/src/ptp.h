@@ -40,7 +40,6 @@ namespace ptp {
 		const double 								Diameter			(const std::vector<Eigen::Vector2d>& vertices);
 		const std::vector<Eigen::Vector3d> 			UniqueSides			(const std::vector<Eigen::Vector2d>& vertices);
 		const std::vector<Eigen::Vector3d> 			UniqueReentrantSides(const std::vector<Eigen::Vector2d>& vertices);
-		const std::vector<std::array<size_t, 3>>	Triangulation		(const std::vector<Eigen::Vector2d>& vertices);
 	}
 
 	namespace Polygon3D {
