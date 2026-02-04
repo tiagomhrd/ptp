@@ -714,6 +714,26 @@ TEST_CASE("Polyhedra") {
 	}
 }
 
+TEST_CASE("Triangulation") {
+	SECTION("Regular Polygons"){
+		for (int nv = 3; nv < 10; ++nv){
+			const auto polygon = regularPolygon(nv);
+			const auto triangulation = ptp::Polygon2D::Triangulation(polygon);
+			REQUIRE(triangulation.size() == nv - 2);
+		}
+	}
+	SECTION("Aligned Sides"){
+		std::vector<Eigen::Vector2d> polygon;
+		polygon.emplace_back(1., 0.);
+		polygon.emplace_back(0., 1.);
+		polygon.emplace_back(0., 0.);
+		for (int n = 0; n < 10; ++n){
+			polygon.push_back((polygon[0] + polygon[2 + n]) / 2.);
+			REQUIRE(ptp::Polygon2D::Triangulation(polygon).size() == 1);
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	int result = Catch::Session().run(argc, argv);
 	return result;
